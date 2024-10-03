@@ -6,6 +6,7 @@ import chalk from "chalk";
 import {Argv} from "./argv";
 import assert from "assert";
 import {Utils} from "./utils";
+import dotenv from "dotenv";
 
 export interface CICDVariable {
     type: "file" | "variable";
@@ -114,8 +115,22 @@ export class VariablesFromFiles {
 
         const projectVariablesFile = `${argv.cwd}/${argv.variablesFile}`;
         if (fs.existsSync(projectVariablesFile)) {
-            const projectVariablesFileData: any = yaml.load(await fs.readFile(projectVariablesFile, "utf8"), {schema: yaml.FAILSAFE_SCHEMA}) ?? {};
+
+            const projectVariablesFileRawContent = await fs.readFile(projectVariablesFile, "utf8");
+            let projectVariablesFileData;
+            try {
+                projectVariablesFileData = yaml.load(projectVariablesFileRawContent, {schema: yaml.FAILSAFE_SCHEMA}) ?? {};
+
+                if (typeof(projectVariablesFileData) === "string") {
+                    projectVariablesFileData = dotenv.parse(projectVariablesFileRawContent);
+                }
+            } catch (e) {
+                if (e instanceof yaml.YAMLException) {
+                    projectVariablesFileData = dotenv.parse(projectVariablesFileRawContent);
+                }
+            }
             assert(projectVariablesFileData != null, "projectEntries cannot be null/undefined");
+
             assert(Utils.isObject(projectVariablesFileData), `${argv.cwd}/.gitlab-ci-local-variables.yml must contain an object`);
             for (const [k, v] of Object.entries(projectVariablesFileData)) {
                 await addToVariables(k, v, 24);
