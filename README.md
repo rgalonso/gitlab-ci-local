@@ -283,6 +283,7 @@ The `--variables-file` [default: $CWD/.gitlab-ci-local-variables.yml] supports t
 ---
 AUTHORIZATION_PASSWORD: djwqiod910321
 DOCKER_LOGIN_PASSWORD: dij3213n123n12in3
+# Will be type File, because value is a file path
 KNOWN_HOSTS: '~/.ssh/known_hosts'
 
 # This is only supported in the yaml format
@@ -298,6 +299,7 @@ EXAMPLE:
 ```
 AUTHORIZATION_PASSWORD=djwqiod910321
 DOCKER_LOGIN_PASSWORD=dij3213n123n12in3
+# NOTE: value will be '~/.ssh/known_hosts' which is different behavior from the yaml format
 KNOWN_HOSTS='~/.ssh/known_hosts'
 ```
 

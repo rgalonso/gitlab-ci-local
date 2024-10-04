@@ -57,11 +57,11 @@ export class VariablesFromFiles {
             }
             return v;
         };
-        const addToVariables = async (key: string, val: any, scopePriority: number) => {
+        const addToVariables = async (key: string, val: any, scopePriority: number, isDotEnv = false) => {
             const {type, values} = unpack(val);
             for (const [matcher, content] of Object.entries(values)) {
                 assert(typeof content == "string", `${key}.${matcher} content must be text or multiline text`);
-                if (type === "variable" || (type === null && !/^[/|~]/.exec(content))) {
+                if (isDotEnv || type === "variable" || (type === null && !/^[/|~]/.exec(content))) {
                     const regexp = matcher === "*" ? /.*/g : new RegExp(`^${matcher.replace(/\*/g, ".*")}$`, "g");
                     variables[key] = variables[key] ?? {type: "variable", environments: []};
                     variables[key].environments.push({content, regexp, regexpPriority: matcher.length, scopePriority});
@@ -115,25 +115,26 @@ export class VariablesFromFiles {
 
         const projectVariablesFile = `${argv.cwd}/${argv.variablesFile}`;
         if (fs.existsSync(projectVariablesFile)) {
-
+            let isDotEnvFormat = false;
             const projectVariablesFileRawContent = await fs.readFile(projectVariablesFile, "utf8");
             let projectVariablesFileData;
             try {
                 projectVariablesFileData = yaml.load(projectVariablesFileRawContent, {schema: yaml.FAILSAFE_SCHEMA}) ?? {};
 
                 if (typeof(projectVariablesFileData) === "string") {
+                    isDotEnvFormat = true;
                     projectVariablesFileData = dotenv.parse(projectVariablesFileRawContent);
                 }
             } catch (e) {
                 if (e instanceof yaml.YAMLException) {
+                    isDotEnvFormat = true;
                     projectVariablesFileData = dotenv.parse(projectVariablesFileRawContent);
                 }
             }
             assert(projectVariablesFileData != null, "projectEntries cannot be null/undefined");
-
             assert(Utils.isObject(projectVariablesFileData), `${argv.cwd}/.gitlab-ci-local-variables.yml must contain an object`);
             for (const [k, v] of Object.entries(projectVariablesFileData)) {
-                await addToVariables(k, v, 24);
+                await addToVariables(k, v, 24, isDotEnvFormat);
             }
         }
 

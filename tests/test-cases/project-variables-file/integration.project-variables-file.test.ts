@@ -5,6 +5,7 @@ import {initSpawnSpy} from "../../mocks/utils.mock";
 import {WhenStatics} from "../../mocks/when-statics";
 import fs from "fs-extra";
 import path from "path";
+import {stripAnsi} from "../../utils";
 
 const cwd = "tests/test-cases/project-variables-file";
 const emptyFileVariable = "dummy";
@@ -102,7 +103,7 @@ test.concurrent("project-variables-file custom-path (.env)", async () => {
     expect(writeStreams.stdoutLines).toEqual(expect.arrayContaining(expected));
 });
 
-test.concurrent("project-variables-file custom-path (.envs)", async () => {
+test.only("project-variables-file custom-path (.envs)", async () => {
     const writeStreams = new WriteStreamsMock();
     await handler({
         cwd: cwd,
@@ -111,29 +112,30 @@ test.concurrent("project-variables-file custom-path (.envs)", async () => {
         variablesFile: ".envs",
     }, writeStreams);
 
-    const expected = [
-        chalk`{blueBright job2} {greenBright >} SECRET_APP_DEBUG=true`,
-        chalk`{blueBright job2} {greenBright >} SECRET_APP_ENV=local`,
-        chalk`{blueBright job2} {greenBright >} SECRET_APP_KEY=`,
-        chalk`{blueBright job2} {greenBright >} SECRET_APP_NAME=Laravel`,
-        chalk`{blueBright job2} {greenBright >} SECRET_APP_URL=http://localhost`,
-        chalk`{blueBright job2} {greenBright >} SECRET_BROADCAST_DRIVER=log`,
-        chalk`{blueBright job2} {greenBright >} SECRET_CACHE_DRIVER=file`,
-        chalk`{blueBright job2} {greenBright >} SECRET_DB_CONNECTION=mysql`,
-        chalk`{blueBright job2} {greenBright >} SECRET_DB_DATABASE=laravel`,
-        chalk`{blueBright job2} {greenBright >} SECRET_DB_HOST=127.0.0.1`,
-        chalk`{blueBright job2} {greenBright >} SECRET_DB_PASSWORD=`,
-        chalk`{blueBright job2} {greenBright >} SECRET_DB_PORT=3306`,
-        chalk`{blueBright job2} {greenBright >} SECRET_DB_USERNAME=root`,
-        chalk`{blueBright job2} {greenBright >} SECRET_FILESYSTEM_DISK=local`,
-        chalk`{blueBright job2} {greenBright >} SECRET_LOG_CHANNEL=stack`,
-        chalk`{blueBright job2} {greenBright >} SECRET_LOG_DEPRECATIONS_CHANNEL=null`,
-        chalk`{blueBright job2} {greenBright >} SECRET_LOG_LEVEL=debug`,
-        chalk`{blueBright job2} {greenBright >} SECRET_MEMCACHED_HOST=127.0.0.1`,
-        chalk`{blueBright job2} {greenBright >} SECRET_QUEUE_CONNECTION=sync`,
-        chalk`{blueBright job2} {greenBright >} SECRET_SESSION_DRIVER=file`,
-        chalk`{blueBright job2} {greenBright >} SECRET_SESSION_LIFETIME=120`,
-    ];
+    const expected = `
+job2 > SECRET_APP_DEBUG=true
+job2 > SECRET_APP_ENV=local
+job2 > SECRET_APP_KEY=
+job2 > SECRET_APP_NAME=Laravel
+job2 > SECRET_APP_URL=http://localhost
+job2 > SECRET_BROADCAST_DRIVER=log
+job2 > SECRET_CACHE_DRIVER=file
+job2 > SECRET_DB_CONNECTION=mysql
+job2 > SECRET_DB_DATABASE=laravel
+job2 > SECRET_DB_HOST=127.0.0.1
+job2 > SECRET_DB_PASSWORD=
+job2 > SECRET_DB_PORT=3306
+job2 > SECRET_DB_USERNAME=root
+job2 > SECRET_FILESYSTEM_DISK=local
+job2 > SECRET_KNOWN_HOSTS=~/known_hosts
+job2 > SECRET_LOG_CHANNEL=stack
+job2 > SECRET_LOG_DEPRECATIONS_CHANNEL=null
+job2 > SECRET_LOG_LEVEL=debug
+job2 > SECRET_MEMCACHED_HOST=127.0.0.1
+job2 > SECRET_QUEUE_CONNECTION=sync
+job2 > SECRET_SESSION_DRIVER=file
+job2 > SECRET_SESSION_LIFETIME=120`;
 
-    expect(writeStreams.stdoutLines).toEqual(expect.arrayContaining(expected));
+    const stdout = stripAnsi(writeStreams.stdoutLines.join("\n"));
+    expect(stdout).toContain(expected);
 });

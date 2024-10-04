@@ -7,4 +7,4 @@ job:
 job2:
   image: busybox
   script:
-    - env | grep SECRET
+    - env | grep SECRET | sort
