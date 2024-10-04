@@ -85,7 +85,7 @@ job2:
   image:
     name: busybox
   script:
-    - env | grep SECRET`);
+    - env | grep SECRET | sort`);
 });
 
 test.concurrent("project-variables-file custom-path (.env)", async () => {
@@ -103,7 +103,7 @@ test.concurrent("project-variables-file custom-path (.env)", async () => {
     expect(writeStreams.stdoutLines).toEqual(expect.arrayContaining(expected));
 });
 
-test.only("project-variables-file custom-path (.envs)", async () => {
+test.concurrent("project-variables-file custom-path (.envs)", async () => {
     const writeStreams = new WriteStreamsMock();
     await handler({
         cwd: cwd,
