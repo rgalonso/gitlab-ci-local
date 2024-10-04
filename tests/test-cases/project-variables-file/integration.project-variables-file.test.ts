@@ -3,15 +3,24 @@ import {handler} from "../../../src/handler";
 import chalk from "chalk";
 import {initSpawnSpy} from "../../mocks/utils.mock";
 import {WhenStatics} from "../../mocks/when-statics";
+import fs from "fs-extra";
+import path from "path";
 
+const cwd = "tests/test-cases/project-variables-file";
+const emptyFileVariable = "dummy";
 beforeAll(() => {
     initSpawnSpy([...WhenStatics.all]);
+    fs.createFileSync(path.join(cwd, emptyFileVariable));
+});
+
+afterAll(() => {
+    fs.removeSync(path.join(cwd, emptyFileVariable));
 });
 
 test.concurrent("project-variables-file <test-job>", async () => {
     const writeStreams = new WriteStreamsMock();
     await handler({
-        cwd: "tests/test-cases/project-variables-file",
+        cwd: cwd,
         job: ["test-job"],
     }, writeStreams);
 
@@ -25,7 +34,7 @@ test.concurrent("project-variables-file <test-job>", async () => {
 test.concurrent("project-variables-file <issue-1333>", async () => {
     const writeStreams = new WriteStreamsMock();
     await handler({
-        cwd: "tests/test-cases/project-variables-file",
+        cwd: cwd,
         file: ".gitlab-ci-issue-1333.yml",
     }, writeStreams);
 
@@ -38,7 +47,7 @@ test.concurrent("project-variables-file <issue-1333>", async () => {
 test.concurrent("project-variables-file custom-path", async () => {
     const writeStreams = new WriteStreamsMock();
     await handler({
-        cwd: "tests/test-cases/project-variables-file",
+        cwd: cwd,
         file: ".gitlab-ci-custom.yml",
         variablesFile: ".custom-local-var-file",
         job: ["job"],
@@ -50,10 +59,38 @@ test.concurrent("project-variables-file custom-path", async () => {
     expect(writeStreams.stdoutLines).toEqual(expect.arrayContaining(expected));
 });
 
+test.concurrent("project-variables-file empty-variable-file", async () => {
+    const writeStreams = new WriteStreamsMock();
+    await handler({
+        cwd: cwd,
+        file: ".gitlab-ci-custom.yml",
+        variablesFile: emptyFileVariable,
+        job: ["job"],
+        preview: true,
+    }, writeStreams);
+    expect(writeStreams.stdoutLines[0]).toEqual(`---
+stages:
+  - .pre
+  - build
+  - test
+  - deploy
+  - .post
+job:
+  image:
+    name: busybox
+  script:
+    - echo $SECRET
+job2:
+  image:
+    name: busybox
+  script:
+    - env | grep SECRET`);
+});
+
 test.concurrent("project-variables-file custom-path (.env)", async () => {
     const writeStreams = new WriteStreamsMock();
     await handler({
-        cwd: "tests/test-cases/project-variables-file",
+        cwd: cwd,
         file: ".gitlab-ci-custom.yml",
         variablesFile: ".env",
         job: ["job"],
@@ -68,7 +105,7 @@ test.concurrent("project-variables-file custom-path (.env)", async () => {
 test.concurrent("project-variables-file custom-path (.envs)", async () => {
     const writeStreams = new WriteStreamsMock();
     await handler({
-        cwd: "tests/test-cases/project-variables-file",
+        cwd: cwd,
         file: ".gitlab-ci-custom.yml",
         job: ["job2"],
         variablesFile: ".envs",
