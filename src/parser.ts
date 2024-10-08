@@ -154,6 +154,15 @@ export class Parser {
             }
             variables["CI_SERVER_SHELL_SSH_PORT"] = predefinedVariables["CI_SERVER_SHELL_SSH_PORT"];
         }
+        // now that we're sure we have a value for CI_SERVER_FQDN, we can use that to set CI_DEPENDENCY_PROXY_SERVER (if needed) and related variables
+        if (!variables["CI_DEPENDENCY_PROXY_SERVER"]) {
+            predefinedVariables["CI_DEPENDENCY_PROXY_SERVER"] = variables["CI_SERVER_FQDN"];
+            variables["CI_DEPENDENCY_PROXY_SERVER"] = predefinedVariables["CI_DEPENDENCY_PROXY_SERVER"];
+        }
+        predefinedVariables["CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX"] = variables["CI_DEPENDENCY_PROXY_SERVER"] + "/" + predefinedVariables["CI_PROJECT_ROOT_NAMESPACE"] + "/dependency_proxy/containers";
+        variables["CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX"] = predefinedVariables["CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX"];
+        predefinedVariables["CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX"] = variables["CI_DEPENDENCY_PROXY_SERVER"] + "/" + predefinedVariables["CI_PROJECT_NAMESPACE"] + "/dependency_proxy/containers";
+        variables["CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX"] = predefinedVariables["CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX"];
 
         let yamlDataList: any[] = [{stages: [".pre", "build", "test", "deploy", ".post"]}];
         const gitlabCiData = await Parser.loadYaml(`${cwd}/${file}`, {}, this.expandVariables);

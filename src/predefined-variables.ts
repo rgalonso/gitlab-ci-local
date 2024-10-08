@@ -10,7 +10,6 @@ type PredefinedVariablesOpts = {
 export function init ({gitData, argv}: PredefinedVariablesOpts): {[name: string]: string} {
     const CI_PROJECT_ROOT_NAMESPACE = gitData.remote.group.split("/")[0];
     const CI_PROJECT_NAMESPACE = gitData.remote.group;
-    const CI_DEPENDENCY_PROXY_SERVER = `${gitData.remote.host}:443`;
     const predefinedVariables: {[key: string]: string} = {
         CI: "true",
         GITLAB_USER_LOGIN: gitData.user["GITLAB_USER_LOGIN"],
@@ -43,9 +42,6 @@ export function init ({gitData, argv}: PredefinedVariablesOpts): {[name: string]
         CI_TEMPLATE_REGISTRY_HOST: "registry.gitlab.com",
         GITLAB_CI: "false",
 
-        CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX: `${CI_DEPENDENCY_PROXY_SERVER}/${CI_PROJECT_ROOT_NAMESPACE}/dependency_proxy/containers`,
-        CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX: `${CI_DEPENDENCY_PROXY_SERVER}/${CI_PROJECT_NAMESPACE}/dependency_proxy/containers`,
-        CI_DEPENDENCY_PROXY_SERVER: CI_DEPENDENCY_PROXY_SERVER,
     };
 
     // Delete variables the user intentionally wants unset
