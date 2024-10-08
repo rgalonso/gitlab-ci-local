@@ -144,6 +144,16 @@ export class Parser {
             predefinedVariables["CI_PROJECT_URL"] = variables["CI_SERVER_URL"] + "/" + variables["CI_PROJECT_PATH"];
             variables["CI_PROJECT_URL"] = predefinedVariables["CI_PROJECT_URL"];
         }
+        if (!variables["CI_SERVER_SHELL_SSH_PORT"]) {
+            if (gitData.remote.schema.startsWith("ssh")) {
+                predefinedVariables["CI_SERVER_SHELL_SSH_PORT"] = gitData.remote.port;
+            }
+            else {
+                // assume standard SSH port
+                predefinedVariables["CI_SERVER_SHELL_SSH_PORT"] = "22";
+            }
+            variables["CI_SERVER_SHELL_SSH_PORT"] = predefinedVariables["CI_SERVER_SHELL_SSH_PORT"];
+        }
 
         let yamlDataList: any[] = [{stages: [".pre", "build", "test", "deploy", ".post"]}];
         const gitlabCiData = await Parser.loadYaml(`${cwd}/${file}`, {}, this.expandVariables);
