@@ -41,6 +41,7 @@ export function init ({gitData, argv}: PredefinedVariablesOpts): {[name: string]
         CI_SERVER_HOST: `${gitData.remote.host}`,
         CI_TEMPLATE_REGISTRY_HOST: "registry.gitlab.com",
         GITLAB_CI: "false",
+        CI_DEPENDENCY_PROXY_USER: "gitlab-ci-token",
 
     };
 
