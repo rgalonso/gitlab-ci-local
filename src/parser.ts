@@ -103,6 +103,48 @@ export class Parser {
         const variables = {...predefinedVariables, ...envMatchedVariables, ...argv.variable};
         const expanded = Utils.expandVariables(variables);
 
+        // assign remaining predefined variables, which may have required partial customization to
+        // support self-hosted instances with non-standard schema and/or server ports
+        if (!variables["CI_SERVER_PROTOCOL"]) {
+            if (gitData.remote.schema.startsWith("http")) {
+                predefinedVariables["CI_SERVER_PROTOCOL"] = gitData.remote.schema;
+            }
+            else {
+                // assume HTTPS
+                predefinedVariables["CI_SERVER_PROTOCOL"] = "https";
+            }
+            variables["CI_SERVER_PROTOCOL"] = predefinedVariables["CI_SERVER_PROTOCOL"];
+        }
+        if (!variables["CI_SERVER_PORT"]) {
+            if (gitData.remote.schema.startsWith("http")) {
+                predefinedVariables["CI_SERVER_PORT"] = gitData.remote.port;
+            }
+            else {
+                // assume standard HTTPS port
+                predefinedVariables["CI_SERVER_PORT"] = "443";
+            }
+            variables["CI_SERVER_PORT"] = predefinedVariables["CI_SERVER_PORT"];
+        }
+        // now that we're sure we have a value for CI_SERVER_PORT, we can use that to set CI_SERVER_FQDN if needed
+        if (!variables["CI_SERVER_FQDN"]) {
+            predefinedVariables["CI_SERVER_FQDN"] = variables["CI_SERVER_HOST"] + ":" + variables["CI_SERVER_PORT"];
+            variables["CI_SERVER_FQDN"] = predefinedVariables["CI_SERVER_FQDN"];
+        }
+        // now that we're sure we have values for CI_SERVER_PROTOCOL and CI_SERVER_FQDN, we can use those to set CI_SERVER_URL if needed
+        if (!variables["CI_SERVER_URL"]) {
+            predefinedVariables["CI_SERVER_URL"] = variables["CI_SERVER_PROTOCOL"] + "://" + predefinedVariables["CI_SERVER_FQDN"];
+            variables["CI_SERVER_URL"] = predefinedVariables["CI_SERVER_URL"];
+        }
+        // now that we're sure we have a value for CI_SERVER_URL, we can use that to set CI_API_V4_URL and CI_PROJECT_URL if needed
+        if (!variables["CI_API_V4_URL"]) {
+            predefinedVariables["CI_API_V4_URL"] = variables["CI_SERVER_URL"] + "/api/v4";
+            variables["CI_API_V4_URL"] = predefinedVariables["CI_API_V4_URL"];
+        }
+        if (!variables["CI_PROJECT_URL"]) {
+            predefinedVariables["CI_PROJECT_URL"] = variables["CI_SERVER_URL"] + "/" + variables["CI_PROJECT_PATH"];
+            variables["CI_PROJECT_URL"] = predefinedVariables["CI_PROJECT_URL"];
+        }
+
         let yamlDataList: any[] = [{stages: [".pre", "build", "test", "deploy", ".post"]}];
         const gitlabCiData = await Parser.loadYaml(`${cwd}/${file}`, {}, this.expandVariables);
 

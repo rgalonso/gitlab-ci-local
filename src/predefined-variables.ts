@@ -8,10 +8,9 @@ type PredefinedVariablesOpts = {
 };
 
 export function init ({gitData, argv}: PredefinedVariablesOpts): {[name: string]: string} {
-    const CI_SERVER_URL = `https://${gitData.remote.host}:443`;
     const CI_PROJECT_ROOT_NAMESPACE = gitData.remote.group.split("/")[0];
     const CI_PROJECT_NAMESPACE = gitData.remote.group;
-    const CI_DEPENDENCY_PROXY_SERVER = Utils.removePrefix(CI_SERVER_URL, "https://");
+    const CI_DEPENDENCY_PROXY_SERVER = `${gitData.remote.host}:443`;
     const predefinedVariables: {[key: string]: string} = {
         CI: "true",
         GITLAB_USER_LOGIN: gitData.user["GITLAB_USER_LOGIN"],
@@ -40,13 +39,7 @@ export function init ({gitData, argv}: PredefinedVariablesOpts): {[name: string]
         CI_COMMIT_DESCRIPTION: "More commit text",
         CI_DEFAULT_BRANCH: gitData.branches.default,
         CI_PIPELINE_SOURCE: "push",
-        CI_SERVER_FQDN: `${gitData.remote.host}`,
         CI_SERVER_HOST: `${gitData.remote.host}`,
-        CI_SERVER_PORT: `${gitData.remote.port}`,
-        CI_SERVER_URL: CI_SERVER_URL,
-        CI_SERVER_PROTOCOL: "https",
-        CI_API_V4_URL: `https://${gitData.remote.host}/api/v4`,
-        CI_PROJECT_URL: `https://${gitData.remote.host}/${gitData.remote.group}/${gitData.remote.project}`,
         CI_TEMPLATE_REGISTRY_HOST: "registry.gitlab.com",
         GITLAB_CI: "false",
 
