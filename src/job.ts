@@ -525,7 +525,7 @@ export class Job {
             await Promise.all(
                 this.services.map(async (service, serviceIndex) => {
                     const serviceName = service.name;
-                    await this.pullImage(writeStreams, serviceName);
+                    await this.pullImage(writeStreams, serviceName, argv.cwd);
                     const serviceContainerId = await this.startService(writeStreams, Utils.expandVariables({...expanded, ...service.variables}), service);
                     const serviceContainerLogFile = `${argv.cwd}/${argv.stateDir}/services-output/${this.safeJobName}/${serviceName}-${serviceIndex}.log`;
                     await this.serviceHealthCheck(writeStreams, service, serviceIndex, serviceContainerLogFile);
@@ -690,7 +690,7 @@ export class Job {
         this.refreshLongRunningSilentTimeout(writeStreams);
 
         if (imageName && !this._containerId) {
-            await this.pullImage(writeStreams, imageName);
+            await this.pullImage(writeStreams, imageName, cwd);
 
             let dockerCmd = `${this.argv.containerExecutable} create --interactive ${this.generateInjectSSHAgentOptions()} `;
             if (this.argv.privileged) {
@@ -914,7 +914,7 @@ export class Job {
         return image.entrypoint;
     }
 
-    private async pullImage (writeStreams: WriteStreams, imageToPull: string) {
+    private async pullImage (writeStreams: WriteStreams, imageToPull: string, cwd: string) {
         const pullPolicy = this.argv.pullPolicy;
         const actualPull = async () => {
             const time = process.hrtime();
@@ -931,6 +931,17 @@ export class Job {
         try {
             await Utils.spawn([this.argv.containerExecutable, "image", "inspect", imageToPull]);
         } catch (e: any) {
+            const CI_DEPENDENCY_PROXY_SERVER = this._variables["CI_DEPENDENCY_PROXY_SERVER"];
+            if (imageToPull.startsWith(CI_DEPENDENCY_PROXY_SERVER)) {
+                try {
+                    await Utils.spawn([this.argv.containerExecutable, "login", CI_DEPENDENCY_PROXY_SERVER], cwd);
+                } catch (e: any) {
+                    assert(!e.stderr.includes("Cannot perform an interactive login"),
+                        `Please authenticate to the Dependency Proxy (${CI_DEPENDENCY_PROXY_SERVER}) https://docs.gitlab.com/ee/user/packages/dependency_proxy/#authenticate-with-the-dependency-proxy`
+                    );
+                    throw e;
+                }
+            }
             await actualPull();
         }
     }

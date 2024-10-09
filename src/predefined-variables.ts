@@ -33,6 +33,8 @@ export function init ({gitData, argv, envMatchedVariables}: PredefinedVariablesO
           : `${gitData.remote.host}:${CI_SERVER_PORT}`);
     const CI_SERVER_URL = envMatchedVariables["CI_SERVER_URL"]
       ?? `${CI_SERVER_PROTOCOL}://${CI_SERVER_FQDN}`;
+    const CI_DEPENDENCY_PROXY_SERVER = envMatchedVariables["CI_DEPENDENCY_PROXY_SERVER"]
+      ?? CI_SERVER_FQDN;
     const CI_PROJECT_ROOT_NAMESPACE = gitData.remote.group.split("/")[0];
     const CI_PROJECT_NAMESPACE = gitData.remote.group;
 
@@ -74,6 +76,9 @@ export function init ({gitData, argv, envMatchedVariables}: PredefinedVariablesO
         CI_PROJECT_URL: `${CI_SERVER_URL}/${gitData.remote.group}/${gitData.remote.project}`,
         CI_TEMPLATE_REGISTRY_HOST: "registry.gitlab.com",
         GITLAB_CI: "false",
+        CI_DEPENDENCY_PROXY_SERVER: CI_DEPENDENCY_PROXY_SERVER,
+        CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX: `${CI_DEPENDENCY_PROXY_SERVER}/${CI_PROJECT_ROOT_NAMESPACE}/dependency_proxy/containers`,
+        CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX: `${CI_DEPENDENCY_PROXY_SERVER}/${CI_PROJECT_NAMESPACE}/dependency_proxy/containers`,
     };
 
     // Delete variables the user intentionally wants unset
